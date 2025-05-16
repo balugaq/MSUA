@@ -1,0 +1,17 @@
+name: MSUA
+author: balugaq
+main: com.balugaq.msua.MSUA
+website: https://github.com/balugaq/MSUA
+version: ${project.version}
+api-version: 1.20
+softdepend:
+  - Slimefun
+commands:
+  msua:
+    description: MSUA base command
+    usage: The MSUA version you have installed does not seem to be compatible with your server setup. Check your console for more detailed info.
+
+permissions:
+  msua.admin:
+    description: Allows you to use all MSUA commands
+    default: op
