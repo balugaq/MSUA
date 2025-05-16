@@ -25,13 +25,14 @@ public class MSUACommands implements TabExecutor {
     }
 
     public static boolean accessible(@NotNull MSUACommand cmd, @NotNull CommandSender sender) {
-        return cmd.accessLevel().compareTo(AccessLevel.op) >= 0 && (sender.isOp() || sender.hasPermission("msua.admin"));
+        return sender.isOp() || sender.hasPermission("msua.admin");
+        //return cmd.accessLevel().compareTo(AccessLevel.op) >= 0 && (sender.isOp() || sender.hasPermission("msua.admin"));
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         for (var cmd : commands) {
-            if (AccessLevel.op.compareTo(cmd.accessLevel()) > 0 && !sender.isOp() && !sender.hasPermission("msua.admin")) {
+            if (!accessible(cmd, sender)) {
                 continue;
             }
 
