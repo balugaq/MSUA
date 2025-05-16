@@ -35,8 +35,10 @@ public class PluginListener implements Listener {
     }
 
     public void patchSlimefunAddon(Plugin plugin) {
-        if (plugin instanceof SlimefunAddon addon) {
-            UnregisterUtil.unregisterAddon(addon);
+        if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
+            if (plugin instanceof SlimefunAddon addon) {
+                UnregisterUtil.unregisterAddon(addon);
+            }
         }
     }
 
