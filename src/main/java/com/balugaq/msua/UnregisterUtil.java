@@ -13,6 +13,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
+@ApiStatus.Obsolete
 @SuppressWarnings("deprecation")
 @UtilityClass
 public class UnregisterUtil {

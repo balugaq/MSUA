@@ -1,15 +1,17 @@
 package com.balugaq.msua.command;
 
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Bukkit;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+@ApiStatus.Obsolete
 public interface AccessLevel extends Comparable<AccessLevel> {
     AccessLevel op = new AccessLevelImpl(4);
     AccessLevel player = new AccessLevelImpl(1);
 
     /**
      * Gets the level of access
+     *
      * @return the level of access
      */
     int getLevel();

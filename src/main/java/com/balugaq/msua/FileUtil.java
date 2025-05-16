@@ -1,10 +1,13 @@
 package com.balugaq.msua;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import java.io.File;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
+@ApiStatus.Obsolete
 public class FileUtil {
     public static final File pluginFolder = MSUA.instance().getDataFolder().getParentFile();
 

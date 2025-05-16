@@ -15,6 +15,7 @@ import org.bukkit.plugin.UnknownDependencyException;
 import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.plugin.java.LibraryLoader;
 import org.bukkit.plugin.java.PluginClassLoader;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -31,6 +32,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 
+@ApiStatus.Experimental
 @SuppressWarnings({"unchecked", "deprecation", "removal"})
 public class PluginUtil {
     public static final Server server = Bukkit.getServer();
@@ -38,6 +40,7 @@ public class PluginUtil {
     public static final LibraryLoader libraryLoader = new LibraryLoader(server.getLogger());
 
     @SneakyThrows
+    @ApiStatus.Experimental
     @Nullable
     public static synchronized Plugin loadPlugin(@NotNull File file) {
         Preconditions.checkArgument(file != null, "File cannot be null");
@@ -55,9 +58,11 @@ public class PluginUtil {
         result = loadPlugin0(file);
 
         if (result != null) {
-            /* Reflection */ List<Plugin> plugins = ((List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins"));
+            /* Reflection */
+            List<Plugin> plugins = ((List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins"));
             plugins.add(result);
-            /* Reflection */ Map<String, Plugin> lookupNames = ((Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames"));
+            /* Reflection */
+            Map<String, Plugin> lookupNames = ((Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames"));
             lookupNames.put(result.getDescription().getName().toLowerCase(Locale.ENGLISH), result); // Paper
             for (String provided : result.getDescription().getProvides()) {
                 lookupNames.putIfAbsent(provided.toLowerCase(Locale.ENGLISH), result); // Paper
@@ -68,6 +73,8 @@ public class PluginUtil {
     }
 
     @SneakyThrows
+    @ApiStatus.Experimental
+    @ApiStatus.Internal
     public static Plugin loadPlugin0(@NotNull File file) {
         Preconditions.checkArgument(file != null, "File cannot be null");
 
@@ -154,6 +161,8 @@ public class PluginUtil {
         return loader.getPlugin();
     }
 
+    @SneakyThrows
+    @ApiStatus.Experimental
     @NotNull
     public static PluginDescriptionFile getPluginDescription(@NotNull File file) throws InvalidDescriptionException {
         Preconditions.checkArgument(file != null, "File cannot be null");
@@ -173,31 +182,31 @@ public class PluginUtil {
 
             return new PluginDescriptionFile(stream);
 
-        } catch (IOException ex) {
-            throw new InvalidDescriptionException(ex);
-        } catch (YAMLException ex) {
+        } catch (IOException | YAMLException ex) {
             throw new InvalidDescriptionException(ex);
         } finally {
             if (jar != null) {
                 try {
                     jar.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
             if (stream != null) {
                 try {
                     stream.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
         }
     }
 
     @SneakyThrows
+    @ApiStatus.Experimental
     public static void handlePaperEnablePlugin(Plugin plugin) {
         Bukkit.getPluginManager().enablePlugin(plugin);
         if (Bukkit.getPluginManager() instanceof SimplePluginManager spm) {
-            /* io.papermc.paper.plugin.manager.PaperPluginManagerImpl */ var impl = spm.paperPluginManager;
+            /* io.papermc.paper.plugin.manager.PaperPluginManagerImpl */
+            var impl = spm.paperPluginManager;
             var loadPlugin = ReflectionUtil.getMethod(impl.getClass(), "loadPlugin", Plugin.class);
             loadPlugin.invoke(impl, plugin);
         }

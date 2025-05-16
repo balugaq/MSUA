@@ -4,17 +4,29 @@ import com.balugaq.msua.MSUA;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+@ApiStatus.Obsolete
 public interface MSUACommand {
     String UNKNOWN = "Unknown";
-    @CanIgnoreReturnValue boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
+
+    static String asString(@Nullable Object obj) {
+        return obj == null ? "null" : obj.toString();
+    }
+
+    @CanIgnoreReturnValue
+    boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
+
     boolean executable(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
+
     @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
+
     @NotNull AccessLevel accessLevel();
+
     @NotNull String name();
 
     default boolean isCommand(@NotNull String[] args, @NotNull String name) {
@@ -59,9 +71,5 @@ public interface MSUACommand {
 
     default void debug(@Nullable Object obj) {
         MSUA.console(asString(obj));
-    }
-
-    static String asString(@Nullable Object obj) {
-        return obj == null ? "null" : obj.toString();
     }
 }

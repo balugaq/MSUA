@@ -7,18 +7,25 @@ import com.balugaq.msua.command.sub.WtfCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@ApiStatus.Obsolete
 public class MSUACommands implements TabExecutor {
     public static final List<MSUACommand> commands = new ArrayList<>();
+
     static {
         commands.add(new LoadCommand());
         commands.add(new UnloadCommand());
         commands.add(new WtfCommand());
+    }
+
+    public static boolean accessible(@NotNull MSUACommand cmd, @NotNull CommandSender sender) {
+        return cmd.accessLevel().compareTo(AccessLevel.op) >= 0 && (sender.isOp() || sender.hasPermission("msua.admin"));
     }
 
     @Override
@@ -61,9 +68,5 @@ public class MSUACommands implements TabExecutor {
         }
 
         return new ArrayList<>();
-    }
-
-    public static boolean accessible(@NotNull MSUACommand cmd, @NotNull CommandSender sender) {
-        return cmd.accessLevel().compareTo(AccessLevel.op) >= 0 && (sender.isOp() || sender.hasPermission("msua.admin"));
     }
 }

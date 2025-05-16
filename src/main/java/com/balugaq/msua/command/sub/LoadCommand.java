@@ -8,7 +8,7 @@ import com.balugaq.msua.command.MSUACommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@ApiStatus.Obsolete
 public class LoadCommand implements MSUACommand {
     @Override
     public @NotNull AccessLevel accessLevel() {

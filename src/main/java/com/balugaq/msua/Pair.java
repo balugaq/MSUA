@@ -1,7 +1,9 @@
 package com.balugaq.msua;
 
 import lombok.Data;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Obsolete
 @Data
 public class Pair<T, U> {
     public final T first;

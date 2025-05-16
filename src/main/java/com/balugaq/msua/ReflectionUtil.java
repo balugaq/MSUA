@@ -1,6 +1,7 @@
 package com.balugaq.msua;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,7 @@ import java.lang.reflect.Method;
  * @author balugaq
  * @since 1.0
  */
+@ApiStatus.Obsolete
 @SuppressWarnings({"unchecked", "unused"})
 @UtilityClass
 public class ReflectionUtil {
