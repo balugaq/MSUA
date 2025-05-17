@@ -1,6 +1,6 @@
 package com.balugaq.msua;
 
-import com.balugaq.msua.api.Rollbacker;
+import com.balugaq.msua.api.Rollback;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
@@ -12,8 +12,6 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.util.List;
-
 @ApiStatus.Obsolete
 public class PluginListener implements Listener {
     @SneakyThrows
@@ -21,12 +19,12 @@ public class PluginListener implements Listener {
     public void onDisablePlugin(PluginDisableEvent event) {
         Plugin jp = event.getPlugin();
 
-        var rollback = Rollbacker.ROLLBACKS.get(jp);
+        var rollback = Rollback.ROLLBACKS.get(jp);
         if (rollback != null) {
             try {
                 rollback.run();
             } finally {
-                Rollbacker.ROLLBACKS.remove(jp);
+                Rollback.ROLLBACKS.remove(jp);
             }
         }
 

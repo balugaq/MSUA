@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ApiStatus.Obsolete
-public class Rollbacker {
+public class Rollback {
     public static final Map<Plugin, Runnable> ROLLBACKS = new HashMap<>();
 
-    public static void addRollback(Plugin plugin, Runnable runnable) {
+    public static void add(Plugin plugin, Runnable runnable) {
         ROLLBACKS.merge(plugin, runnable, (a, b) -> () -> {
             a.run();
             b.run();

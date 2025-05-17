@@ -71,14 +71,6 @@ public class PluginUtil {
         handlePaperUnloadPlugin(plugin);
     }
 
-    @Deprecated
-    @SneakyThrows
-    @ApiStatus.Experimental
-    @NotNull
-    public static synchronized Plugin loadPlugin(@NotNull File file) {
-        return loadJar(file);
-    }
-
     @SneakyThrows
     @ApiStatus.Experimental
     @NotNull
@@ -114,13 +106,6 @@ public class PluginUtil {
         return result;
     }
 
-    @SneakyThrows
-    @ApiStatus.Experimental
-    @ApiStatus.Internal
-    @NotNull
-    public static Plugin loadPlugin0(@NotNull File file) {
-        return loadPlugin0(file, false);
-    }
 
     @SneakyThrows
     @ApiStatus.Experimental
