@@ -1,6 +1,7 @@
 package com.balugaq.msua;
 
 import com.google.common.base.Preconditions;
+import io.papermc.lib.PaperLib;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
 import lombok.SneakyThrows;
@@ -20,10 +21,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.error.YAMLException;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,41 +37,79 @@ import java.util.jar.JarFile;
 import java.util.logging.Level;
 
 @ApiStatus.Experimental
-@SuppressWarnings({"unchecked", "deprecation", "removal"})
+@SuppressWarnings({"unchecked", "deprecation", "removal", "UnstableApiUsage"})
 public class PluginUtil {
     public static final Server server = Bukkit.getServer();
+    @Deprecated
     public static final List<PluginClassLoader> loaders = new CopyOnWriteArrayList<>();
+    @Deprecated
     public static final LibraryLoader libraryLoader = new LibraryLoader(server.getLogger());
 
     @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void adaptedLoadPlugin(Plugin plugin, boolean loadDependencies) {
+        if (loadDependencies) {
+            var dependencies = getDependencies(plugin);
+            for (var p : dependencies) {
+                adaptedLoadPlugin(p, true);
+            }
+        }
+
+        handlePaperLoadPlugin(plugin);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void adaptedUnloadPlugin(Plugin plugin, boolean unloadChildren) {
+        if (unloadChildren) {
+            var children = getChildren(plugin);
+            for (var p : children) {
+                adaptedUnloadPlugin(p, true);
+            }
+        }
+
+        handlePaperUnloadPlugin(plugin);
+    }
+
+    @Deprecated
+    @SneakyThrows
     @ApiStatus.Experimental
-    @Nullable
+    @NotNull
     public static synchronized Plugin loadPlugin(@NotNull File file) {
+        return loadJar(file);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    @NotNull
+    public static synchronized Plugin loadJar(@NotNull File file) {
+        return loadJar(file, true);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    @NotNull
+    public static synchronized Plugin loadJar(@NotNull File file, boolean loadPlugin) {
         Preconditions.checkArgument(file != null, "File cannot be null");
-        // Bypass Paper
+        // MSUA start - bypass paper
         // // Paper start
         // if (true) {
         //     try {
-        //         return this.paperPluginManager.loadPlugin(file);
+        //         return this.paperPluginManager.loadJar(file);
         //     } catch (org.bukkit.plugin.InvalidDescriptionException ignored) {
         //         return null;
         //     }
         // }
         // // Paper end
-        Plugin result = null;
-        result = loadPlugin0(file);
+        // MSUA end
 
-        if (result != null) {
-            /* Reflection */
-            List<Plugin> plugins = ((List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins"));
-            plugins.add(result);
-            /* Reflection */
-            Map<String, Plugin> lookupNames = ((Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames"));
-            lookupNames.put(result.getDescription().getName().toLowerCase(Locale.ENGLISH), result); // Paper
-            for (String provided : result.getDescription().getProvides()) {
-                lookupNames.putIfAbsent(provided.toLowerCase(Locale.ENGLISH), result); // Paper
-            }
+        Plugin result = loadPlugin0(file, true);
+
+        // MSUA start - load plugin
+        if (result != null && loadPlugin) {
+            adaptedLoadPlugin(result, true);
         }
+        // MSUA end
 
         return result;
     }
@@ -75,7 +117,16 @@ public class PluginUtil {
     @SneakyThrows
     @ApiStatus.Experimental
     @ApiStatus.Internal
+    @NotNull
     public static Plugin loadPlugin0(@NotNull File file) {
+        return loadPlugin0(file, false);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    @ApiStatus.Internal
+    @Nullable
+    public static Plugin loadPlugin0(@NotNull File file, boolean loadDependencies) {
         Preconditions.checkArgument(file != null, "File cannot be null");
 
         if (!file.exists()) {
@@ -130,6 +181,20 @@ public class PluginUtil {
             Plugin current = server.getPluginManager().getPlugin(pluginName);
 
             if (current == null) {
+                // MSUA start - load dependencies
+                if (loadDependencies) {
+                    var files = Arrays.stream(server.getPluginsFolder().listFiles()).filter(f -> f.getName().endsWith(".jar")).toList();
+                    for (var f : files) {
+                        var plugin = loadJar(f, false);
+                        if (plugin.getName().equals(pluginName)) {
+                            adaptedLoadPlugin(plugin, true);
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                // MSUA end
+
                 throw new UnknownDependencyException("Unknown dependency " + pluginName + ". Please download and install " + pluginName + " to run this plugin.");
             }
         }
@@ -139,17 +204,26 @@ public class PluginUtil {
         var jar = new JarFile(file);
         final PluginClassLoader loader;
         try {
+            // MSUA start - fix loader
+            //loader = new PluginClassLoader(JavaPluginLoader.class.getClassLoader(), description, dataFolder, file, (libraryLoader != null) ? libraryLoader.createLoader(description) : null, null, null);
             loader = new PluginClassLoader(JavaPluginLoader.class.getClassLoader(), description, dataFolder, file, (libraryLoader != null) ? libraryLoader.createLoader(description) : null, jar, new DependencyContext() {
                 @Override
                 public boolean isTransitiveDependency(@NotNull PluginMeta pluginMeta, @NotNull PluginMeta pluginMeta1) {
-                    return false;
+                    return Bukkit.getPluginManager().isTransitiveDependency(pluginMeta, pluginMeta1);
                 }
 
                 @Override
                 public boolean hasDependency(@NotNull String s) {
-                    return false;
+                    if (PaperLib.isPaper() && Bukkit.getPluginManager() instanceof SimplePluginManager spm) {
+                        /* io.papermc.paper.plugin.manager.PaperPluginManagerImpl */
+                        var impl = spm.paperPluginManager;
+                        return (boolean) ReflectionUtil.invokeMethod(impl, "hasDependency", s);
+                    } else {
+                        return Bukkit.getPluginManager().getPlugin(s) != null;
+                    }
                 }
             }); // Paper
+            // MSUA end
         } catch (InvalidPluginException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -202,13 +276,130 @@ public class PluginUtil {
 
     @SneakyThrows
     @ApiStatus.Experimental
-    public static void handlePaperEnablePlugin(Plugin plugin) {
-        Bukkit.getPluginManager().enablePlugin(plugin);
-        if (Bukkit.getPluginManager() instanceof SimplePluginManager spm) {
+    public static void handlePaperLoadPlugin(Plugin plugin) {
+        handleSpigotLoadPlugin(plugin);
+        if (PaperLib.isPaper() && Bukkit.getPluginManager() instanceof SimplePluginManager spm) {
             /* io.papermc.paper.plugin.manager.PaperPluginManagerImpl */
             var impl = spm.paperPluginManager;
             var loadPlugin = ReflectionUtil.getMethod(impl.getClass(), "loadPlugin", Plugin.class);
             loadPlugin.invoke(impl, plugin);
+        }
+    }
+
+    @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void handleSpigotLoadPlugin(Plugin plugin) {
+        /* Reflection */
+        List<Plugin> plugins = ((List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins"));
+        plugins.add(plugin);
+        /* Reflection */
+        Map<String, Plugin> lookupNames = ((Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames"));
+        lookupNames.put(plugin.getDescription().getName().toLowerCase(Locale.ENGLISH), plugin); // Paper
+        for (String provided : plugin.getDescription().getProvides()) {
+            lookupNames.putIfAbsent(provided.toLowerCase(Locale.ENGLISH), plugin); // Paper
+        }
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    public static void handlePaperUnloadPlugin(Plugin plugin) {
+        handleSpigotUnloadPlugin(plugin);
+        if (PaperLib.isPaper() && Bukkit.getPluginManager() instanceof SimplePluginManager spm) {
+            /* io.papermc.paper.plugin.manager.PaperPluginManagerImpl */
+            var impl = spm.paperPluginManager;
+            /* io.papermc.plugin.manager.PaperPluginInstanceManager */
+            var instanceManager = ReflectionUtil.getValue(impl, "instanceManager");
+
+            PluginMeta configuration = plugin.getPluginMeta();
+
+            List<Plugin> plugins = (List<Plugin>) ReflectionUtil.getValue(instanceManager, "plugins");
+            plugins.remove(plugin);
+            Map<String, Plugin> lookupNames = (Map<String, Plugin>) ReflectionUtil.getValue(instanceManager, "lookupNames");
+
+            lookupNames.remove(configuration.getName().toLowerCase(Locale.ENGLISH), plugin);
+            for (String providedPlugin : configuration.getProvidedPlugins()) {
+                lookupNames.remove(providedPlugin.toLowerCase(Locale.ENGLISH), plugin);
+            }
+
+            /* io.papermc.paper.plugin.entrypoint.dependency.MetaDependencyTree */
+            var dependencyTree = ReflectionUtil.getValue(instanceManager, "dependencyTree");
+            var remove = ReflectionUtil.getMethod(dependencyTree.getClass(), "remove", PluginMeta.class);
+            remove.invoke(dependencyTree, configuration);
+        }
+
+        unloadJar(plugin);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void handleSpigotUnloadPlugin(Plugin plugin) {
+        var plugins = (List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins");
+        plugins.remove(plugin);
+        var lookupNames = (Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames");
+        lookupNames.remove(plugin.getDescription().getName().toLowerCase(Locale.ENGLISH));
+        for (String provided : plugin.getDescription().getProvides()) {
+            lookupNames.remove(provided.toLowerCase(Locale.ENGLISH));
+        }
+    }
+
+    @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void enablePlugin(Plugin plugin, boolean enableDependencies) {
+        if (enableDependencies) {
+            var dependencies = getDependencies(plugin);
+            for (var p : dependencies) {
+                enablePlugin(p, true);
+            }
+        }
+
+        Bukkit.getPluginManager().enablePlugin(plugin);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Obsolete
+    public static void disablePlugin(Plugin plugin, boolean disableChildren) {
+        if (disableChildren) {
+            var children = getChildren(plugin);
+            for (var p : children) {
+                disablePlugin(p, true);
+            }
+        }
+
+        Bukkit.getPluginManager().disablePlugin(plugin);
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    public static void unloadJar(Plugin plugin) {
+        if (plugin.getClass().getClassLoader() instanceof Closeable c) {
+            unloadJar(c);
+        } else {
+            MSUA.console(new RuntimeException("Plugin(" + plugin.getName() + ") class loader is not closeable"));
+        }
+    }
+
+    @SneakyThrows
+    @ApiStatus.Experimental
+    public static void unloadJar(Closeable classLoader) {
+        classLoader.close();
+    }
+
+    public static List<Plugin> getChildren(Plugin plugin) {
+        List<Plugin> children = new ArrayList<>();
+        for (var p : Bukkit.getPluginManager().getPlugins()) {
+            if (p != plugin && getDependencies(p).contains(plugin)) {
+                children.add(p);
+            }
+        }
+
+        return children;
+    }
+
+    public static List<Plugin> getDependencies(Plugin plugin) {
+        if (!PaperLib.isPaper()) {
+            return plugin.getDescription().getDepend().stream().map(Bukkit.getPluginManager()::getPlugin).toList();
+        } else {
+            return plugin.getPluginMeta().getPluginDependencies().stream().map(Bukkit.getPluginManager()::getPlugin).toList();
         }
     }
 }

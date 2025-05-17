@@ -30,21 +30,24 @@ public class LoadCommand implements MSUACommand {
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        var simpleName = getBehindArgument(args, 1);
-        var plugin = new File(FileUtil.pluginFolder, simpleName + ".jar");
-        if (!plugin.exists()) {
-            wrongUsage(sender, "/msua load <plugin>");
+        var loadDependencies = getArgument(args, 1, "<arg>").equalsIgnoreCase(FLAG_LOAD_DEPENDENCIES);
+
+        var simpleName = getBehindArgument(args, 1 + (loadDependencies ? 1 : 0), "<file_name>");
+        var file = new File(FileUtil.pluginFolder, simpleName + ".jar");
+        if (!file.exists()) {
+            wrongUsage(sender, "/msua load [" + FLAG_LOAD_DEPENDENCIES + "] <plugin>");
             return true;
         }
 
         try {
-            var p = PluginUtil.loadPlugin(plugin);
-            if (p != null) {
-                if (p.isEnabled()) {
+            var plugin = PluginUtil.loadJar(file, false);
+            if (plugin != null) {
+                if (plugin.isEnabled()) {
                     MSUA.complain(sender, "Plugin " + simpleName + " is already loaded.");
-                    return true;
                 }
-                PluginUtil.handlePaperEnablePlugin(p);
+
+                PluginUtil.adaptedLoadPlugin(plugin, loadDependencies);
+                PluginUtil.enablePlugin(plugin, loadDependencies);
                 MSUA.blue(sender, "Loaded " + simpleName + ".");
             } else {
                 MSUA.complain(sender, "Unable to load plugin " + simpleName + ".");
@@ -65,6 +68,15 @@ public class LoadCommand implements MSUACommand {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> simpleNames = new ArrayList<>();
+
+        if (args.length == 2) {
+            simpleNames.add(FLAG_LOAD_DEPENDENCIES);
+        }
+
+        if (args.length > 3) {
+            return simpleNames;
+        }
+
         var files = FileUtil.pluginFolder.listFiles();
         if (files == null) {
             return simpleNames;

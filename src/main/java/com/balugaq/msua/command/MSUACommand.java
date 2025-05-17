@@ -13,6 +13,10 @@ import java.util.List;
 @ApiStatus.Obsolete
 public interface MSUACommand {
     String UNKNOWN = "Unknown";
+    String FLAG_LOAD_DEPENDENCIES = "--load-dependencies";
+    String FLAG_UNLOAD_CHILDREN = "--unload-children";
+    String FLAG_ENABLE_DEPENDENCIES = "--enable-dependencies";
+    String FLAG_DISABLE_CHILDREN = "--disable-children";
 
     static String asString(@Nullable Object obj) {
         return obj == null ? "null" : obj.toString();

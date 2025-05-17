@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @ApiStatus.Obsolete
-public class UnloadCommand implements MSUACommand {
+public class DisableCommand implements MSUACommand {
     @Override
     public @NotNull AccessLevel accessLevel() {
         return AccessLevel.op;
@@ -24,37 +24,26 @@ public class UnloadCommand implements MSUACommand {
 
     @Override
     public @NotNull String name() {
-        return "unload";
+        return "disable";
     }
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        var unloadChildren = getArgument(args, 1, "<arg>").equalsIgnoreCase(FLAG_UNLOAD_CHILDREN);
+        var disableChildren = getArgument(args, 1, "<arg>").equalsIgnoreCase(FLAG_DISABLE_CHILDREN);
 
-        var pluginName = getArgument(args, 1 + (unloadChildren ? 1 : 0), "<plugin_name>");
+        var pluginName = getArgument(args, 1 + (disableChildren ? 1 : 0), "<plugin_name>");
         var plugin = Bukkit.getPluginManager().getPlugin(pluginName);
         if (plugin == null) {
-            wrongUsage(sender, "/msua unload [" + FLAG_UNLOAD_CHILDREN + "] <plugin>");
+            wrongUsage(sender, "/msua disable [" + FLAG_DISABLE_CHILDREN + "] <plugin>");
             return true;
         }
 
         if (!plugin.isEnabled()) {
-            MSUA.complain(sender, "Plugin " + pluginName + " is already unloaded.");
+            MSUA.complain(sender, "Plugin " + pluginName + " is already disabled.");
         }
 
-        try {
-            PluginUtil.disablePlugin(plugin, unloadChildren);
-        } catch (Throwable e) {
-            MSUA.complain(sender, e);
-        }
-
-        try {
-            PluginUtil.adaptedUnloadPlugin(plugin, unloadChildren);
-        } catch (Throwable e) {
-            MSUA.complain(sender, e);
-        }
-
-        MSUA.blue(sender, "Unloaded " + pluginName + ".");
+        PluginUtil.disablePlugin(plugin, disableChildren);
+        MSUA.blue(sender, "Disabled " + pluginName + ".");
         return true;
     }
 
@@ -67,10 +56,10 @@ public class UnloadCommand implements MSUACommand {
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> raw = new ArrayList<>();
         if (args.length == 2) {
-            raw.add(FLAG_UNLOAD_CHILDREN);
+            raw.add(FLAG_DISABLE_CHILDREN);
         }
 
-        if (args.length == 2 || args.length == 3 && args[1].equalsIgnoreCase(FLAG_UNLOAD_CHILDREN)) {
+        if (args.length == 2 || args.length == 3 && args[1].equalsIgnoreCase(FLAG_DISABLE_CHILDREN)) {
             raw.addAll(Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(Plugin::getName).toList());
         }
         return raw;

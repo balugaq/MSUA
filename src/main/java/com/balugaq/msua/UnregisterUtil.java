@@ -11,6 +11,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import lombok.experimental.UtilityClass;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -88,6 +90,7 @@ public class UnregisterUtil {
     public static void unregisterAddon(@NotNull SlimefunAddon addon) {
         unregisterAllItems(addon);
         unregisterItemGroups(addon);
+        unregisterAllGEOResources(addon);
     }
 
     public static void unregisterAllItems(@NotNull SlimefunAddon addon) {
@@ -108,6 +111,19 @@ public class UnregisterUtil {
         }
         for (ItemGroup itemGroup : itemGroups) {
             unregisterItemGroup(itemGroup);
+        }
+    }
+
+    public static void unregisterAllGEOResources(@NotNull SlimefunAddon addon) {
+        List<NamespacedKey> toRemove = new ArrayList<>();
+        var resources = Slimefun.getRegistry().getGEOResources();
+        for (var key : resources.keySet()) {
+            if (key.getNamespace().equalsIgnoreCase(addon.getName())) {
+                toRemove.add(key);
+            }
+        }
+        for (var key : toRemove) {
+            resources.remove(key);
         }
     }
 

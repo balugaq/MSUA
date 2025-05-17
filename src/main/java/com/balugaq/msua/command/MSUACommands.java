@@ -1,6 +1,8 @@
 package com.balugaq.msua.command;
 
 import com.balugaq.msua.MSUA;
+import com.balugaq.msua.command.sub.DisableCommand;
+import com.balugaq.msua.command.sub.EnableCommand;
 import com.balugaq.msua.command.sub.LoadCommand;
 import com.balugaq.msua.command.sub.UnloadCommand;
 import com.balugaq.msua.command.sub.WtfCommand;
@@ -22,6 +24,8 @@ public class MSUACommands implements TabExecutor {
         commands.add(new LoadCommand());
         commands.add(new UnloadCommand());
         commands.add(new WtfCommand());
+        commands.add(new EnableCommand());
+        commands.add(new DisableCommand());
     }
 
     public static boolean accessible(@NotNull MSUACommand cmd, @NotNull CommandSender sender) {

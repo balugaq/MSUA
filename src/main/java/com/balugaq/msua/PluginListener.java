@@ -12,6 +12,8 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.List;
+
 @ApiStatus.Obsolete
 public class PluginListener implements Listener {
     @SneakyThrows

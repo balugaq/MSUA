@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.balugaq.msua</groupId>
     <artifactId>MSUA</artifactId>
-    <version>Alpha2</version>
+    <version>Alpha3</version>
 
     <pluginRepositories>
         <pluginRepository>
