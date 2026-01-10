@@ -1,6 +1,7 @@
 package com.balugaq.msua;
 
 import com.balugaq.msua.api.Rollback;
+import io.github.pylonmc.pylon.core.addon.PylonAddon;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
@@ -31,13 +32,14 @@ public class PluginListener implements Listener {
         unregisterVanillaRecipes(jp);
         unloadListeners(jp);
 
-        patchSlimefunAddon(jp);
-    }
-
-    public void patchSlimefunAddon(Plugin plugin) {
         if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
-            if (plugin instanceof SlimefunAddon addon) {
-                UnregisterUtil.unregisterAddon(addon);
+            if (jp instanceof SlimefunAddon addon) {
+                SlimefunUnregisterUtil.unregisterAddon(addon);
+            }
+        }
+        if (Bukkit.getPluginManager().isPluginEnabled("PylonCore")) {
+            if (jp instanceof PylonAddon addon) {
+                PylonUnregisterUtil.unregisterAddon(addon);
             }
         }
     }

@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.balugaq.msua</groupId>
     <artifactId>MSUA</artifactId>
-    <version>Alpha3</version>
+    <version>Alpha4</version>
 
     <pluginRepositories>
         <pluginRepository>
@@ -118,28 +118,16 @@
             <url>https://jitpack.io</url>
         </repository>
         <repository>
-            <id>jeffMediaPublic</id>
-            <url>https://repo.jeff-media.com/public</url>
-        </repository>
-        <repository>
-            <id>mcmmo-repo</id>
-            <url>https://nexus.neetgames.com/repository/maven-public</url>
-        </repository>
-        <repository>
-            <id>bg-repo</id>
-            <url>https://repo.bg-software.com/repository/api/</url>
-        </repository>
-        <repository>
-            <id>rosewood-repo</id>
-            <url>https://repo.rosewooddev.io/repository/public/</url>
-        </repository>
-        <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
             <id>sonatype-oss-snapshots1</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>xenondevs</id>
+            <url>https://repo.xenondevs.xyz/releases</url>
         </repository>
     </repositories>
 
@@ -148,7 +136,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.1-R0.1-SNAPSHOT</version>
+            <version>1.21.10-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -156,6 +144,27 @@
             <groupId>com.github.SlimefunGuguProject</groupId>
             <artifactId>Slimefun4</artifactId>
             <version>b39097e015</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.pylonmc</groupId>
+            <artifactId>pylon-core</artifactId>
+            <version>0.24.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>xyz.xenondevs.invui</groupId>
+            <artifactId>invui-core</artifactId>
+            <version>1.47</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>xyz.xenondevs.invui</groupId>
+            <artifactId>invui-kotlin</artifactId>
+            <version>1.46</version>
             <scope>provided</scope>
         </dependency>
 

@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @ApiStatus.Obsolete
 public class LoadCommand implements MSUACommand {
@@ -69,7 +70,7 @@ public class LoadCommand implements MSUACommand {
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> simpleNames = new ArrayList<>();
 
-        if (args.length == 2) {
+        if (args.length == 2 && (FLAG_LOAD_DEPENDENCIES.toLowerCase().startsWith(args[1].toLowerCase()))) {
             simpleNames.add(FLAG_LOAD_DEPENDENCIES);
         }
 
@@ -82,7 +83,7 @@ public class LoadCommand implements MSUACommand {
             return simpleNames;
         }
 
-        var loaded = Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(plugin -> FileUtil.getJarFile(plugin.getClass())).toList();
+        var loadedPaths = Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(plugin -> FileUtil.getJarFile(plugin.getClass())).filter(Objects::nonNull).map(File::getAbsolutePath).toList();
 
         for (File file : files) {
             if (file.isDirectory()) {
@@ -93,7 +94,11 @@ public class LoadCommand implements MSUACommand {
                 continue;
             }
 
-            if (loaded.contains(file)) {
+            if (loadedPaths.contains(file.getAbsolutePath())) {
+                continue;
+            }
+
+            if (args.length != 0 && !file.getName().startsWith(args[args.length - 1])) {
                 continue;
             }
 
