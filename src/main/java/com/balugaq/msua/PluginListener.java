@@ -35,13 +35,13 @@ public class PluginListener implements Listener {
         if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
             if (jp instanceof SlimefunAddon addon) {
                 MSUA.sendOpMessage("Disabling SlimefunAddon ", addon.getName());
-                SlimefunUnregisterUtil.unregisterAddon(addon);
+                SlimefunUtil.unregisterAddon(addon);
             }
         }
         if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
             if (jp instanceof RebarAddon addon) {
                 MSUA.sendOpMessage("Disabling RebarAddon ", addon.getDisplayName());
-                RebarUnregisterUtil.unregisterAddon(addon);
+                RebarUtil.unregisterAddon(addon);
             }
         }
     }

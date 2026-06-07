@@ -28,7 +28,7 @@ import java.util.Set;
 @ApiStatus.Obsolete
 @SuppressWarnings("deprecation")
 @UtilityClass
-public class SlimefunUnregisterUtil {
+public class SlimefunUtil {
     public static void unregisterItem(SlimefunItem item) {
         if (item instanceof Radioactive) {
             Slimefun.getRegistry().getRadioactiveItems().remove(item);

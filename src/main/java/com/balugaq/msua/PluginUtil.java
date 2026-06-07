@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
+import io.github.pylonmc.rebar.event.RebarBlockUnloadEvent;
+import io.github.pylonmc.rebar.util.position.ChunkPosition;
 import io.papermc.lib.PaperLib;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
@@ -37,9 +39,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
@@ -349,36 +353,21 @@ public class PluginUtil {
 
         Bukkit.getPluginManager().enablePlugin(plugin);
         if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
-            if (plugin instanceof RebarAddon) {
-
-                Map<Location, UUID> phantoms = new HashMap<>();
-                for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
-                    if (!(rebar instanceof PhantomBlock pb)) continue;
-                    phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
-                }
-
-                // make BlockStorage reload rebar data
-                for (World world : Bukkit.getWorlds()) {
-                    for (Chunk chunk : world.getLoadedChunks()) {
-                        new ChunkLoadEvent(chunk, false).callEvent();
-                    }
-                }
-
-                // remove phantom outlines
-                for (var entry : phantoms.entrySet()) {
-                    if (!(BlockStorage.get(entry.getKey()) instanceof PhantomBlock)) {
-                        Entity entity = entry.getKey().getWorld().getEntity(entry.getValue());
-                        if (entity != null) entity.remove();
-                    }
-                }
+            if (plugin instanceof RebarAddon ra) {
+                RebarUtil.enablePlugin(ra);
             }
-            MSUA.sendOpMessage("Reloaded chunks");
         }
     }
 
     @SneakyThrows
     @ApiStatus.Obsolete
     public static void disablePlugin(Plugin plugin, boolean disableChildren) {
+        Set<Location> normals = new HashSet<>();
+        for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
+            if (rebar instanceof PhantomBlock) continue;
+            normals.add(rebar.getBlock().getLocation());
+        }
+
         if (disableChildren) {
             var children = getChildren(plugin);
             for (var p : children) {
@@ -387,6 +376,11 @@ public class PluginUtil {
         }
 
         Bukkit.getPluginManager().disablePlugin(plugin);
+        if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
+            if (plugin instanceof RebarAddon ra) {
+                RebarUtil.disablePlugin(ra, normals);
+            }
+        }
     }
 
     @SneakyThrows
