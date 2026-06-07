@@ -87,8 +87,11 @@ public class SlimefunUnregisterUtil {
     }
 
     public static void unregisterAddon(@NotNull SlimefunAddon addon) {
+        MSUA.sendOpMessage("Unregistering ", addon.getName(), " SlimefunItem");
         unregisterAllItems(addon);
+        MSUA.sendOpMessage("Unregistering ", addon.getName(), " ItemGroup");
         unregisterItemGroups(addon);
+        MSUA.sendOpMessage("Unregistering ", addon.getName(), " GEOResource");
         unregisterAllGEOResources(addon);
     }
 

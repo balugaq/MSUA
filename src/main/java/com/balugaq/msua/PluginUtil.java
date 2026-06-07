@@ -1,12 +1,20 @@
 package com.balugaq.msua;
 
 import com.google.common.base.Preconditions;
+import io.github.pylonmc.rebar.addon.RebarAddon;
+import io.github.pylonmc.rebar.block.BlockStorage;
+import io.github.pylonmc.rebar.block.PhantomBlock;
 import io.papermc.lib.PaperLib;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
@@ -28,9 +36,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -338,6 +348,32 @@ public class PluginUtil {
         }
 
         Bukkit.getPluginManager().enablePlugin(plugin);
+        if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
+            if (plugin instanceof RebarAddon) {
+
+                Map<Location, UUID> phantoms = new HashMap<>();
+                for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
+                    if (!(rebar instanceof PhantomBlock pb)) continue;
+                    phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
+                }
+
+                // make BlockStorage reload rebar data
+                for (World world : Bukkit.getWorlds()) {
+                    for (Chunk chunk : world.getLoadedChunks()) {
+                        new ChunkLoadEvent(chunk, false).callEvent();
+                    }
+                }
+
+                // remove phantom outlines
+                for (var entry : phantoms.entrySet()) {
+                    if (!(BlockStorage.get(entry.getKey()) instanceof PhantomBlock)) {
+                        Entity entity = entry.getKey().getWorld().getEntity(entry.getValue());
+                        if (entity != null) entity.remove();
+                    }
+                }
+            }
+            MSUA.sendOpMessage("Reloaded chunks");
+        }
     }
 
     @SneakyThrows

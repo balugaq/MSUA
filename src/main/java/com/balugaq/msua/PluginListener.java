@@ -1,7 +1,7 @@
 package com.balugaq.msua;
 
 import com.balugaq.msua.api.Rollback;
-import io.github.pylonmc.pylon.core.addon.PylonAddon;
+import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
@@ -34,12 +34,14 @@ public class PluginListener implements Listener {
 
         if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
             if (jp instanceof SlimefunAddon addon) {
+                MSUA.sendOpMessage("Disabling SlimefunAddon ", addon.getName());
                 SlimefunUnregisterUtil.unregisterAddon(addon);
             }
         }
-        if (Bukkit.getPluginManager().isPluginEnabled("PylonCore")) {
-            if (jp instanceof PylonAddon addon) {
-                PylonUnregisterUtil.unregisterAddon(addon);
+        if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
+            if (jp instanceof RebarAddon addon) {
+                MSUA.sendOpMessage("Disabling RebarAddon ", addon.getDisplayName());
+                RebarUnregisterUtil.unregisterAddon(addon);
             }
         }
     }

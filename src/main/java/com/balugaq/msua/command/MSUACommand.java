@@ -18,10 +18,6 @@ public interface MSUACommand {
     String FLAG_ENABLE_DEPENDENCIES = "--enable-dependencies";
     String FLAG_DISABLE_CHILDREN = "--disable-children";
 
-    static String asString(@Nullable Object obj) {
-        return obj == null ? "null" : obj.toString();
-    }
-
     @CanIgnoreReturnValue
     boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
 
@@ -71,9 +67,5 @@ public interface MSUACommand {
 
     default void wrongUsage(@NotNull CommandSender sender, @NotNull String usage) {
         MSUA.complain(sender, "Usage: " + usage);
-    }
-
-    default void debug(@Nullable Object obj) {
-        MSUA.console(asString(obj));
     }
 }

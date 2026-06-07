@@ -66,12 +66,12 @@ public class UnloadCommand implements MSUACommand {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> raw = new ArrayList<>();
-        if (args.length == 2 && (FLAG_UNLOAD_CHILDREN.toLowerCase().startsWith(args[1].toLowerCase()))) {
-            raw.add(FLAG_UNLOAD_CHILDREN);
+        if (args.length == 2) {
+            raw.addAll(Arrays.stream(Bukkit.getPluginManager().getPlugins()).filter(Plugin::isEnabled).map(Plugin::getName).filter(name -> name.startsWith(args[args.length - 1])).toList());
         }
 
-        if (args.length == 2 || (args.length == 3 && args[1].equalsIgnoreCase(FLAG_UNLOAD_CHILDREN))) {
-            raw.addAll(Arrays.stream(Bukkit.getPluginManager().getPlugins()).filter(Plugin::isEnabled).map(Plugin::getName).filter(name -> name.startsWith(args[args.length - 1])).toList());
+        if (args.length == 3) {
+            raw.add(FLAG_UNLOAD_CHILDREN);
         }
         return raw;
     }

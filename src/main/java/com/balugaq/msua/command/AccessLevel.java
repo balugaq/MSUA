@@ -1,6 +1,5 @@
 package com.balugaq.msua.command;
 
-import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,8 +20,11 @@ public interface AccessLevel extends Comparable<AccessLevel> {
         return Integer.compare(getLevel(), o.getLevel());
     }
 
-    @RequiredArgsConstructor
     class AccessLevelImpl implements AccessLevel {
+        public AccessLevelImpl(int level) {
+            this.level = level;
+        }
+
         public final int level;
 
         @Override

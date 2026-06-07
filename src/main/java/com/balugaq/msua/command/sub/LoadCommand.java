@@ -70,39 +70,37 @@ public class LoadCommand implements MSUACommand {
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         List<String> simpleNames = new ArrayList<>();
 
-        if (args.length == 2 && (FLAG_LOAD_DEPENDENCIES.toLowerCase().startsWith(args[1].toLowerCase()))) {
+        if (args.length == 2) {
+            var files = FileUtil.pluginFolder.listFiles();
+            if (files == null) {
+                return simpleNames;
+            }
+
+            var loadedPaths = Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(plugin -> FileUtil.getJarFile(plugin.getClass())).filter(Objects::nonNull).map(File::getAbsolutePath).toList();
+
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    continue;
+                }
+
+                if (!file.getName().endsWith(".jar")) {
+                    continue;
+                }
+
+                if (loadedPaths.contains(file.getAbsolutePath())) {
+                    continue;
+                }
+
+                if (!file.getName().startsWith(args[1])) {
+                    continue;
+                }
+
+                simpleNames.add(file.getName().substring(0, file.getName().length() - 4));
+            }
+        }
+
+        if (args.length == 3) {
             simpleNames.add(FLAG_LOAD_DEPENDENCIES);
-        }
-
-        if (args.length > 3) {
-            return simpleNames;
-        }
-
-        var files = FileUtil.pluginFolder.listFiles();
-        if (files == null) {
-            return simpleNames;
-        }
-
-        var loadedPaths = Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(plugin -> FileUtil.getJarFile(plugin.getClass())).filter(Objects::nonNull).map(File::getAbsolutePath).toList();
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                continue;
-            }
-
-            if (!file.getName().endsWith(".jar")) {
-                continue;
-            }
-
-            if (loadedPaths.contains(file.getAbsolutePath())) {
-                continue;
-            }
-
-            if (args.length != 0 && !file.getName().startsWith(args[args.length - 1])) {
-                continue;
-            }
-
-            simpleNames.add(file.getName().substring(0, file.getName().length() - 4));
         }
 
         return simpleNames;
