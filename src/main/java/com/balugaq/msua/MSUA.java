@@ -1,14 +1,13 @@
 package com.balugaq.msua;
 
-import com.balugaq.msua.command.MSUACommand;
 import com.balugaq.msua.command.MSUACommands;
+import com.balugaq.msua.integrations.IntegrationManager;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -16,8 +15,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 
 @ApiStatus.Obsolete
@@ -25,7 +22,6 @@ import java.util.logging.Level;
 @SuppressWarnings("deprecation")
 public class MSUA extends JavaPlugin {
     public static final String PREFIX = ChatColor.BLUE + "[" + ChatColor.GREEN + "MSUA" + ChatColor.BLUE + "] " + ChatColor.WHITE;
-    private static final PluginListener PLUGIN_LISTENER = new PluginListener();
     private static MSUA instance = null;
     private IntegrationManager integrationManager;
 
@@ -102,7 +98,7 @@ public class MSUA extends JavaPlugin {
 
         MinecraftVersion current = MinecraftVersion.current();
         if (current.isBefore(MinecraftVersion.V1_21_11)) {
-            getLogger().severe("MSUA requires Paper 1.21.11 or higher to run. Please update your server.");
+            getLogger().severe("MSUA requires Paper " + MinecraftVersion.V1_21_11.humanize() + " or higher to run. Please update your server.");
             pass = false;
         }
 
@@ -112,7 +108,7 @@ public class MSUA extends JavaPlugin {
         }
 
         getLogger().info("MSUA is starting...");
-        Bukkit.getPluginManager().registerEvents(PLUGIN_LISTENER, this);
+        Bukkit.getPluginManager().registerEvents(new PluginListener(), this);
         Bukkit.getPluginCommand("msua").setExecutor(new MSUACommands());
         integrationManager = new IntegrationManager();
         integrationManager.setup();

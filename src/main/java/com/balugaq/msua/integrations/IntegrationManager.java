@@ -1,5 +1,8 @@
-package com.balugaq.msua;
+package com.balugaq.msua.integrations;
 
+import com.balugaq.msua.MSUA;
+import com.balugaq.msua.integrations.pylon.PylonIntegration;
+import com.balugaq.msua.integrations.rebar.RebarIntegration;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -9,9 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * @author balugaq
- */
 @NullMarked
 @Getter
 public class IntegrationManager {
@@ -21,12 +21,16 @@ public class IntegrationManager {
     private final List<IIntegration> integrations = new ArrayList<>();
 
     public void setup() {
-        Bukkit.getScheduler().runTaskLaterAsynchronously(MSUA.instance(), () -> {
+        Bukkit.getScheduler().runTaskLaterAsynchronously(
+                MSUA.instance(), () -> {
             PluginManager pm = Bukkit.getPluginManager();
 
             enabledPylon = pm.isPluginEnabled("Pylon");
             enabledRebar = pm.isPluginEnabled("Rebar");
             enabledSlimefun = pm.isPluginEnabled("Slimefun");
+
+            setupIntegration(enabledRebar, RebarIntegration::new);
+            setupIntegration(enabledPylon, PylonIntegration::new);
         }, 2L);
     }
 

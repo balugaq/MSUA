@@ -3,8 +3,8 @@ package com.balugaq.msua.command.sub;
 import com.balugaq.msua.FileUtil;
 import com.balugaq.msua.MSUA;
 import com.balugaq.msua.PluginUtil;
-import com.balugaq.msua.command.AccessLevel;
-import com.balugaq.msua.command.MSUACommand;
+import com.balugaq.msua.command.IAccessLevel;
+import com.balugaq.msua.command.IMSUACommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Objects;
 
 @ApiStatus.Obsolete
-public class LoadCommand implements MSUACommand {
+public class LoadCommand implements IMSUACommand {
     @Override
-    public @NotNull AccessLevel accessLevel() {
-        return AccessLevel.op;
+    public @NotNull IAccessLevel accessLevel() {
+        return IAccessLevel.op;
     }
 
     @Override

@@ -4,9 +4,9 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 @ApiStatus.Obsolete
-public interface AccessLevel extends Comparable<AccessLevel> {
-    AccessLevel op = new AccessLevelImpl(4);
-    AccessLevel player = new AccessLevelImpl(1);
+public interface IAccessLevel extends Comparable<IAccessLevel> {
+    IAccessLevel op = new AccessLevel(4);
+    IAccessLevel player = new AccessLevel(1);
 
     /**
      * Gets the level of access
@@ -16,12 +16,12 @@ public interface AccessLevel extends Comparable<AccessLevel> {
     int getLevel();
 
     @Override
-    default int compareTo(@NotNull AccessLevel o) {
+    default int compareTo(@NotNull IAccessLevel o) {
         return Integer.compare(getLevel(), o.getLevel());
     }
 
-    class AccessLevelImpl implements AccessLevel {
-        public AccessLevelImpl(int level) {
+    class AccessLevel implements IAccessLevel {
+        public AccessLevel(int level) {
             this.level = level;
         }
 

@@ -6,12 +6,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 @ApiStatus.Obsolete
-public interface MSUACommand {
+public interface IMSUACommand {
     String UNKNOWN = "Unknown";
     String FLAG_LOAD_DEPENDENCIES = "--load-dependencies";
     String FLAG_UNLOAD_CHILDREN = "--unload-children";
@@ -25,7 +24,7 @@ public interface MSUACommand {
 
     @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args);
 
-    @NotNull AccessLevel accessLevel();
+    @NotNull IAccessLevel accessLevel();
 
     @NotNull String name();
 

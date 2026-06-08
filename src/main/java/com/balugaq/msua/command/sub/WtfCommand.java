@@ -2,8 +2,8 @@ package com.balugaq.msua.command.sub;
 
 import com.balugaq.msua.FileUtil;
 import com.balugaq.msua.MSUA;
-import com.balugaq.msua.command.AccessLevel;
-import com.balugaq.msua.command.MSUACommand;
+import com.balugaq.msua.command.IAccessLevel;
+import com.balugaq.msua.command.IMSUACommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,10 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 
 @ApiStatus.Obsolete
-public class WtfCommand implements MSUACommand {
+public class WtfCommand implements IMSUACommand {
     @Override
-    public @NotNull AccessLevel accessLevel() {
-        return AccessLevel.op;
+    public @NotNull IAccessLevel accessLevel() {
+        return IAccessLevel.op;
     }
 
     @Override

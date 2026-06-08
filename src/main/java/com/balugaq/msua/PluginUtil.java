@@ -1,10 +1,12 @@
 package com.balugaq.msua;
 
+import com.balugaq.msua.integrations.rebar.UnloadHandlers;
 import com.google.common.base.Preconditions;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
 import io.github.pylonmc.rebar.config.ConfigSection;
+import io.github.pylonmc.rebar.culling.BlockCullingEngine;
 import io.github.pylonmc.rebar.event.RebarBlockUnloadEvent;
 import io.github.pylonmc.rebar.recipe.ConfigurableRecipeType;
 import io.github.pylonmc.rebar.registry.RebarRegistry;
@@ -18,7 +20,6 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -363,33 +364,31 @@ public class PluginUtil {
                 // see Rebar#loadRecipes()
                 RebarUtil.sendOpMessage("Reloading recipes");
 
-                int delay = 0;
                 for (Object typeObj : RebarRegistry.RECIPE_TYPES) {
                     if (!(typeObj instanceof ConfigurableRecipeType<?> type)) continue;
 
                     ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
                     if (config == null) continue;
-                    Bukkit.getScheduler().runTaskLater(MSUA.instance(), () -> {
-                        type.loadFromConfig(config);
-                    }, delay++); // prevent server from crashing
+                    type.loadFromConfig(config);
                 }
 
                 RebarUtil.sendOpMessage("Reloading chunks");
+                Set<Chunk> chunks = new HashSet<>();
                 Map<Location, UUID> phantoms = new HashMap<>();
                 for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
                     if (!(rebar instanceof PhantomBlock pb)) continue;
                     phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
+                    chunks.add(pb.getBlock().getChunk());
                 }
 
                 // make BlockStorage reload rebar data
                 RebarUtil.sendOpMessage("Reloading BlockStorage");
                 Object tasks = ReflectionUtil.getValue(BlockStorage.INSTANCE, "chunkAutosaveTasks");
-                for (World world : Bukkit.getWorlds()) {
-                    for (Chunk chunk : world.getLoadedChunks()) {
-                        Object job = ReflectionUtil.invokeMethod(tasks, "remove", new ChunkPosition(chunk));
-                        if (job != null) ReflectionUtil.invokeMethod(job, "cancel");
-                        ReflectionUtil.invokeMethod(RebarUtil.getBlockStorageInstance(), "onChunkLoad", new ChunkLoadEvent(chunk, false));
-                    }
+                for (Chunk chunk : chunks) {
+                    Object job = ReflectionUtil.invokeMethod(tasks, "remove", new ChunkPosition(chunk));
+                    if (job != null) ReflectionUtil.invokeMethod(job, "cancel");
+                    // call onChunkLoad to reload the chunk
+                    ReflectionUtil.invokeMethod(RebarUtil.getBlockStorageInstance(), "onChunkLoad", new ChunkLoadEvent(chunk, false));
                 }
 
                 // remove phantom outlines
@@ -416,23 +415,20 @@ public class PluginUtil {
         }
 
         if (MSUA.instance().getIntegrationManager().isEnabledRebar()) {
+            // see BlockStorage#onChunkUnload
             RebarUtil.sendOpMessage("Calling RebarBlockUnloadEvent");
-            NamespacedKey sck = new NamespacedKey("pylon", "smeltery_controller");
             for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
                 if (rebar instanceof PhantomBlock) continue;
 
                 if (rebar.getSchema().getAddon() == plugin) {
                     // call unload event for blocks from the addon
+                    ReflectionUtil.invokeMethod(BlockCullingEngine.INSTANCE, "remove", rebar);
                     new RebarBlockUnloadEvent(rebar.getBlock(), rebar).callEvent();
                 }
 
-                if (plugin.getName().equals("Pylon")) {
-                    if (rebar.getSchema().getKey().equals(sck)) {
-                        RebarUtil.sendOpMessage("Handling SmelteryController");
-                        // pixels are not persistent, in order to simulate the server stopping, remove the pixels.
-                        ReflectionUtil.invokeMethod(rebar, "removePixels");
-                    }
-                }
+                // For other addons to handle block when unloading
+                // see PylonIntegration
+                UnloadHandlers.handle(rebar);
             }
         }
 

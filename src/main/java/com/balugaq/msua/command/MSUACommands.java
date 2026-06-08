@@ -18,7 +18,7 @@ import java.util.List;
 
 @ApiStatus.Obsolete
 public class MSUACommands implements TabExecutor {
-    public static final List<MSUACommand> commands = new ArrayList<>();
+    public static final List<IMSUACommand> commands = new ArrayList<>();
 
     static {
         commands.add(new LoadCommand());
@@ -28,7 +28,7 @@ public class MSUACommands implements TabExecutor {
         commands.add(new DisableCommand());
     }
 
-    public static boolean accessible(@NotNull MSUACommand cmd, @NotNull CommandSender sender) {
+    public static boolean accessible(@NotNull IMSUACommand cmd, @NotNull CommandSender sender) {
         return sender.isOp() || sender.hasPermission("msua.admin");
         //return cmd.accessLevel().compareTo(AccessLevel.op) >= 0 && (sender.isOp() || sender.hasPermission("msua.admin"));
     }
@@ -59,7 +59,7 @@ public class MSUACommands implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length <= 1) {
-            return commands.stream().filter(cmd -> accessible(cmd, sender)).map(MSUACommand::name).toList();
+            return commands.stream().filter(cmd -> accessible(cmd, sender)).map(IMSUACommand::name).toList();
         }
 
         for (var cmd : commands) {

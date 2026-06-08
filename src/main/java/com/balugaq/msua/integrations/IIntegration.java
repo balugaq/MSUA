@@ -1,8 +1,5 @@
-package com.balugaq.msua;
+package com.balugaq.msua.integrations;
 
-/**
- * @author balugaq
- */
 public interface IIntegration {
     void setup();
 
