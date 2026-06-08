@@ -87,11 +87,11 @@ public class SlimefunUtil {
     }
 
     public static void unregisterAddon(@NotNull SlimefunAddon addon) {
-        MSUA.sendOpMessage("Unregistering ", addon.getName(), " SlimefunItem");
+        sendOpMessage("Unregistering ", addon.getName(), " SlimefunItem");
         unregisterAllItems(addon);
-        MSUA.sendOpMessage("Unregistering ", addon.getName(), " ItemGroup");
+        sendOpMessage("Unregistering ", addon.getName(), " ItemGroup");
         unregisterItemGroups(addon);
-        MSUA.sendOpMessage("Unregistering ", addon.getName(), " GEOResource");
+        sendOpMessage("Unregistering ", addon.getName(), " GEOResource");
         unregisterAllGEOResources(addon);
     }
 
@@ -135,5 +135,12 @@ public class SlimefunUtil {
         }
 
         Slimefun.getRegistry().getAllItemGroups().remove(itemGroup);
+    }
+
+    public static void sendOpMessage(Object... msg) {
+        Object[] objs = new Object[msg.length+1];
+        objs[0] = "[SlimefunExtension] ";
+        System.arraycopy(msg, 0, objs, 1, msg.length);
+        MSUA.sendOpMessage(objs);
     }
 }

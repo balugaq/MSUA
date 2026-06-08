@@ -4,19 +4,14 @@ import com.google.common.base.Preconditions;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
-import io.github.pylonmc.rebar.event.RebarBlockUnloadEvent;
-import io.github.pylonmc.rebar.util.position.ChunkPosition;
+import io.github.pylonmc.rebar.block.RebarBlock;
 import io.papermc.lib.PaperLib;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
@@ -39,12 +34,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -248,6 +240,10 @@ public class PluginUtil {
             JarEntry entry = jar.getJarEntry("plugin.yml");
 
             if (entry == null) {
+                entry = jar.getJarEntry("paper-plugin.yml");
+            }
+
+            if (entry == null) {
                 throw new InvalidDescriptionException(new FileNotFoundException("Jar does not contain plugin.yml"));
             }
 
@@ -354,7 +350,7 @@ public class PluginUtil {
         Bukkit.getPluginManager().enablePlugin(plugin);
         if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
             if (plugin instanceof RebarAddon ra) {
-                RebarUtil.enablePlugin(ra);
+                RebarUtil.enableAddon(ra);
             }
         }
     }
@@ -362,10 +358,10 @@ public class PluginUtil {
     @SneakyThrows
     @ApiStatus.Obsolete
     public static void disablePlugin(Plugin plugin, boolean disableChildren) {
-        Set<Location> normals = new HashSet<>();
+        Map<Location, RebarBlock> normals = new HashMap<>();
         for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
             if (rebar instanceof PhantomBlock) continue;
-            normals.add(rebar.getBlock().getLocation());
+            normals.put(rebar.getBlock().getLocation(), rebar);
         }
 
         if (disableChildren) {
@@ -378,7 +374,7 @@ public class PluginUtil {
         Bukkit.getPluginManager().disablePlugin(plugin);
         if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
             if (plugin instanceof RebarAddon ra) {
-                RebarUtil.disablePlugin(ra, normals);
+                RebarUtil.disableAddon(ra, normals);
             }
         }
     }
