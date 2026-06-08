@@ -1,11 +1,9 @@
 package com.balugaq.msua;
 
-import io.github.pylonmc.pylon.content.machines.smelting.SmelteryController;
 import io.github.pylonmc.rebar.Rebar;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
-import io.github.pylonmc.rebar.block.RebarBlock;
 import io.github.pylonmc.rebar.config.ConfigSection;
 import io.github.pylonmc.rebar.content.guide.RebarGuide;
 import io.github.pylonmc.rebar.entity.EntityStorage;
@@ -52,22 +50,22 @@ public class RebarUtil {
 
     public static void unregisterAddon(RebarAddon addon) {
         try {
-            sendOpMessage("Unregistering ", addon.getDisplayName(), " BlockStorage#cleanup");
+            sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " BlockStorage#cleanup");
             ReflectionUtil.invokeMethod(BlockStorage.INSTANCE, "cleanup$rebar", addon);
         } catch (Exception e) {
             MSUA.console(e);
         }
         try {
-            sendOpMessage("Unregistering ", addon.getDisplayName(), " EntityStorage#cleanup");
+            sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " EntityStorage#cleanup");
             ReflectionUtil.invokeMethod(EntityStorage.INSTANCE, "cleanup$rebar", addon);
         } catch (Exception e) {
             MSUA.console(e);
         }
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.GAMETESTS#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.GAMETESTS#unregisterAllFromAddon");
         RebarRegistry.GAMETESTS.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " GuidePage ItemButton");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " GuidePage ItemButton");
         getGuidePages().values().forEach(p -> {
             List<Object> toRemove = new ArrayList<>();
             for (Object i : p.getButtons()) {
@@ -83,13 +81,13 @@ public class RebarUtil {
             }
             p.getButtons().removeAll(toRemove);
         });
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.ITEMS#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.ITEMS#unregisterAllFromAddon");
         RebarRegistry.ITEMS.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.ITEM_TAGS#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.ITEM_TAGS#unregisterAllFromAddon");
         RebarRegistry.ITEM_TAGS.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " GuidePage FluidButton");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " GuidePage FluidButton");
 
         getGuidePages().values().forEach(p -> {
             List<Object> toRemove = new ArrayList<>();
@@ -104,17 +102,17 @@ public class RebarUtil {
             }
             p.getButtons().removeAll(toRemove);
         });
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.FLUIDS#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.FLUIDS#unregisterAllFromAddon");
         RebarRegistry.FLUIDS.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.BLOCKS#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.BLOCKS#unregisterAllFromAddon");
         RebarRegistry.BLOCKS.unregisterAllFromAddon(addon);
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.ENTITIES#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.ENTITIES#unregisterAllFromAddon");
         RebarRegistry.ENTITIES.unregisterAllFromAddon(addon);
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.RECIPE_TYPES#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.RECIPE_TYPES#unregisterAllFromAddon");
         RebarRegistry.RECIPE_TYPES.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " GuidePage ResearchButton");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " GuidePage ResearchButton");
         getGuidePages().values().forEach(p -> {
             List<Object> toRemove = new ArrayList<>();
             for (Object i : p.getButtons()) {
@@ -128,10 +126,10 @@ public class RebarUtil {
             }
             p.getButtons().removeAll(toRemove);
         });
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.RESEARCHES#unregisterAllFromAddon");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.RESEARCHES#unregisterAllFromAddon");
         RebarRegistry.RESEARCHES.unregisterAllFromAddon(addon);
 
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " GuidePage PageButton");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " GuidePage PageButton");
         getGuidePages().values().forEach(p -> {
             List<Object> toRemove = new ArrayList<>();
             for (Object i : p.getButtons()) {
@@ -145,7 +143,7 @@ public class RebarUtil {
             }
             p.getButtons().removeAll(toRemove);
         });
-        sendOpMessage("Unregistering ", addon.getDisplayName(), " RebarRegistry.ADDONS#unregister");
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.ADDONS#unregister");
         if (RebarRegistry.ADDONS.contains(addon.getKey())) {
             RebarRegistry.ADDONS.unregister(addon);
         }
@@ -169,59 +167,6 @@ public class RebarUtil {
             }
         }
         return pages;
-    }
-
-    public static void disableAddon(RebarAddon ra, Set<Location> normals) {
-        sendOpMessage("Calling RebarBlockUnloadEvent");
-        // call unload event for blocks from the addon
-        for (var loc : normals) {
-            if (BlockStorage.get(loc) instanceof PhantomBlock pb) {
-                new RebarBlockUnloadEvent(pb.getBlock(), pb).callEvent();
-            }
-        }
-    }
-
-    /**
-     * @see Rebar#loadRecipes()
-     */
-    public static void enableAddon(RebarAddon ra) {
-        sendOpMessage("Reloading recipes");
-
-        for (Object typeObj : RebarRegistry.RECIPE_TYPES) {
-            if (!(typeObj instanceof ConfigurableRecipeType<?> type)) continue;
-
-            ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
-            if (config == null) continue;
-            type.loadFromConfig(config);
-        }
-
-        sendOpMessage("Reloading chunks");
-        Map<Location, UUID> phantoms = new HashMap<>();
-        for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
-            if (!(rebar instanceof PhantomBlock pb)) continue;
-            phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
-        }
-
-        // make BlockStorage reload rebar data
-        sendOpMessage("Reloading BlockStorage");
-        Object tasks = ReflectionUtil.getValue(BlockStorage.INSTANCE, "chunkAutosaveTasks");
-        for (World world : Bukkit.getWorlds()) {
-            for (Chunk chunk : world.getLoadedChunks()) {
-                Object job = ReflectionUtil.invokeMethod(tasks, "remove", new ChunkPosition(chunk));
-                if (job != null) ReflectionUtil.invokeMethod(job, "cancel");
-                ReflectionUtil.invokeMethod(RebarUtil.getBlockStorageInstance(), "onChunkLoad", new ChunkLoadEvent(chunk, false));
-            }
-        }
-
-        // remove phantom outlines
-        sendOpMessage("Removing phantom outlines");
-        for (var entry : phantoms.entrySet()) {
-            if (!(BlockStorage.get(entry.getKey()) instanceof PhantomBlock)) {
-                Entity entity = entry.getKey().getWorld().getEntity(entry.getValue());
-                if (entity != null) entity.remove();
-            }
-        }
-        sendOpMessage("Reloaded chunks");
     }
 
     public static void sendOpMessage(Object... msg) {

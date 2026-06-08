@@ -1,6 +1,5 @@
 package com.balugaq.msua;
 
-import com.balugaq.msua.api.Rollback;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import lombok.SneakyThrows;
@@ -20,21 +19,12 @@ public class PluginListener implements Listener {
     public void onDisablePlugin(PluginDisableEvent event) {
         Plugin jp = event.getPlugin();
 
-        var rollback = Rollback.ROLLBACKS.get(jp);
-        if (rollback != null) {
-            try {
-                rollback.run();
-            } finally {
-                Rollback.ROLLBACKS.remove(jp);
-            }
-        }
-
         MSUA.sendOpMessage("Unregistering vanilla recipes ", jp.getName());
         unregisterVanillaRecipes(jp);
         MSUA.sendOpMessage("Unregistering listeners ", jp.getName());
         unloadListeners(jp);
 
-        if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
+        if (MSUA.instance().getIntegrationManager().isEnabledSlimefun()) {
             if (jp instanceof SlimefunAddon addon) {
                 MSUA.sendOpMessage("Disabling SlimefunAddon ", addon.getName());
                 SlimefunUtil.unregisterAddon(addon);

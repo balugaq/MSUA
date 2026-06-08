@@ -1,18 +1,26 @@
 package com.balugaq.msua;
 
 import com.google.common.base.Preconditions;
-import io.github.pylonmc.pylon.content.machines.smelting.SmelteryController;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
-import io.github.pylonmc.rebar.block.RebarBlock;
+import io.github.pylonmc.rebar.config.ConfigSection;
+import io.github.pylonmc.rebar.event.RebarBlockUnloadEvent;
+import io.github.pylonmc.rebar.recipe.ConfigurableRecipeType;
+import io.github.pylonmc.rebar.registry.RebarRegistry;
+import io.github.pylonmc.rebar.util.position.ChunkPosition;
 import io.papermc.lib.PaperLib;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import io.papermc.paper.plugin.provider.entrypoint.DependencyContext;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
@@ -40,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -199,7 +208,7 @@ public class PluginUtil {
         final PluginClassLoader loader;
         try {
             // MSUA start - fix loader
-            //loader = new PluginClassLoader(JavaPluginLoader.class.getClassLoader(), description, dataFolder, file, (libraryLoader != null) ? libraryLoader.createLoader(description) : null, null, null);
+            // loader = new PluginClassLoader(JavaPluginLoader.class.getClassLoader(), description, dataFolder, file, (libraryLoader != null) ? libraryLoader.createLoader(description) : null, null, null);
             loader = new PluginClassLoader(JavaPluginLoader.class.getClassLoader(), description, dataFolder, file, (libraryLoader != null) ? libraryLoader.createLoader(description) : null, jar, new DependencyContext() {
                 @Override
                 public boolean isTransitiveDependency(@NotNull PluginMeta pluginMeta, @NotNull PluginMeta pluginMeta1) {
@@ -287,10 +296,8 @@ public class PluginUtil {
     @SneakyThrows
     @ApiStatus.Obsolete
     public static void handleSpigotLoadPlugin(Plugin plugin) {
-        /* Reflection */
         List<Plugin> plugins = ((List<Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "plugins"));
         plugins.add(plugin);
-        /* Reflection */
         Map<String, Plugin> lookupNames = ((Map<String, Plugin>) ReflectionUtil.getValue(Bukkit.getPluginManager(), "lookupNames"));
         lookupNames.put(plugin.getDescription().getName().toLowerCase(Locale.ENGLISH), plugin); // Paper
         for (String provided : plugin.getDescription().getProvides()) {
@@ -351,9 +358,49 @@ public class PluginUtil {
         }
 
         Bukkit.getPluginManager().enablePlugin(plugin);
-        if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
+        if (MSUA.instance().getIntegrationManager().isEnabledRebar()) {
             if (plugin instanceof RebarAddon ra) {
-                RebarUtil.enableAddon(ra);
+                // see Rebar#loadRecipes()
+                RebarUtil.sendOpMessage("Reloading recipes");
+
+                int delay = 0;
+                for (Object typeObj : RebarRegistry.RECIPE_TYPES) {
+                    if (!(typeObj instanceof ConfigurableRecipeType<?> type)) continue;
+
+                    ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
+                    if (config == null) continue;
+                    Bukkit.getScheduler().runTaskLater(MSUA.instance(), () -> {
+                        type.loadFromConfig(config);
+                    }, delay++); // prevent server from crashing
+                }
+
+                RebarUtil.sendOpMessage("Reloading chunks");
+                Map<Location, UUID> phantoms = new HashMap<>();
+                for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
+                    if (!(rebar instanceof PhantomBlock pb)) continue;
+                    phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
+                }
+
+                // make BlockStorage reload rebar data
+                RebarUtil.sendOpMessage("Reloading BlockStorage");
+                Object tasks = ReflectionUtil.getValue(BlockStorage.INSTANCE, "chunkAutosaveTasks");
+                for (World world : Bukkit.getWorlds()) {
+                    for (Chunk chunk : world.getLoadedChunks()) {
+                        Object job = ReflectionUtil.invokeMethod(tasks, "remove", new ChunkPosition(chunk));
+                        if (job != null) ReflectionUtil.invokeMethod(job, "cancel");
+                        ReflectionUtil.invokeMethod(RebarUtil.getBlockStorageInstance(), "onChunkLoad", new ChunkLoadEvent(chunk, false));
+                    }
+                }
+
+                // remove phantom outlines
+                RebarUtil.sendOpMessage("Removing phantom outlines");
+                for (var entry : phantoms.entrySet()) {
+                    if (!(BlockStorage.get(entry.getKey()) instanceof PhantomBlock)) {
+                        Entity entity = entry.getKey().getWorld().getEntity(entry.getValue());
+                        if (entity != null) entity.remove();
+                    }
+                }
+                RebarUtil.sendOpMessage("Reloaded chunks");
             }
         }
     }
@@ -361,19 +408,6 @@ public class PluginUtil {
     @SneakyThrows
     @ApiStatus.Obsolete
     public static void disablePlugin(Plugin plugin, boolean disableChildren) {
-        Set<Location> normals = new HashSet<>();
-        for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
-            if (rebar instanceof PhantomBlock) continue;
-            if (plugin.getName().equals("Pylon")) {
-                RebarUtil.sendOpMessage("Handling SmelteryController");
-                if (rebar instanceof SmelteryController sc) {
-                    // pixels are not persistent, in order to simulate the server stopping, remove the pixels.
-                    ReflectionUtil.invokeMethod(sc, "removePixels");
-                }
-            }
-            normals.add(rebar.getBlock().getLocation());
-        }
-
         if (disableChildren) {
             var children = getChildren(plugin);
             for (var p : children) {
@@ -381,28 +415,38 @@ public class PluginUtil {
             }
         }
 
-        Bukkit.getPluginManager().disablePlugin(plugin);
-        if (Bukkit.getPluginManager().isPluginEnabled("Rebar")) {
-            if (plugin instanceof RebarAddon ra) {
-                RebarUtil.disableAddon(ra, normals);
+        if (MSUA.instance().getIntegrationManager().isEnabledRebar()) {
+            RebarUtil.sendOpMessage("Calling RebarBlockUnloadEvent");
+            NamespacedKey sck = new NamespacedKey("pylon", "smeltery_controller");
+            for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
+                if (rebar instanceof PhantomBlock) continue;
+
+                if (rebar.getSchema().getAddon() == plugin) {
+                    // call unload event for blocks from the addon
+                    new RebarBlockUnloadEvent(rebar.getBlock(), rebar).callEvent();
+                }
+
+                if (plugin.getName().equals("Pylon")) {
+                    if (rebar.getSchema().getKey().equals(sck)) {
+                        RebarUtil.sendOpMessage("Handling SmelteryController");
+                        // pixels are not persistent, in order to simulate the server stopping, remove the pixels.
+                        ReflectionUtil.invokeMethod(rebar, "removePixels");
+                    }
+                }
             }
         }
+
+        Bukkit.getPluginManager().disablePlugin(plugin);
     }
 
     @SneakyThrows
     @ApiStatus.Experimental
     public static void unloadJar(Plugin plugin) {
         if (plugin.getClass().getClassLoader() instanceof Closeable c) {
-            unloadJar(c);
+            c.close();
         } else {
             MSUA.console(new RuntimeException("Plugin(" + plugin.getName() + ") class loader is not closeable"));
         }
-    }
-
-    @SneakyThrows
-    @ApiStatus.Experimental
-    public static void unloadJar(Closeable classLoader) {
-        classLoader.close();
     }
 
     public static List<Plugin> getChildren(Plugin plugin) {

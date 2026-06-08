@@ -3,6 +3,7 @@ package com.balugaq.msua;
 import com.balugaq.msua.command.MSUACommand;
 import com.balugaq.msua.command.MSUACommands;
 import io.papermc.lib.PaperLib;
+import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -20,11 +21,13 @@ import java.util.Set;
 import java.util.logging.Level;
 
 @ApiStatus.Obsolete
+@Getter
 @SuppressWarnings("deprecation")
 public class MSUA extends JavaPlugin {
     public static final String PREFIX = ChatColor.BLUE + "[" + ChatColor.GREEN + "MSUA" + ChatColor.BLUE + "] " + ChatColor.WHITE;
-    public static final PluginListener PLUGIN_LISTENER = new PluginListener();
-    public static MSUA instance = null;
+    private static final PluginListener PLUGIN_LISTENER = new PluginListener();
+    private static MSUA instance = null;
+    private IntegrationManager integrationManager;
 
     public static MSUA instance() {
         return instance;
@@ -97,24 +100,29 @@ public class MSUA extends JavaPlugin {
             pass = false;
         }
 
-        int major = PaperLib.getMinecraftVersion();
-        if (major < 20) {
-            getLogger().severe("MSUA requires Paper 1.20 or higher to run. Please update your server.");
+        MinecraftVersion current = MinecraftVersion.current();
+        if (current.isBefore(MinecraftVersion.V1_21_11)) {
+            getLogger().severe("MSUA requires Paper 1.21.11 or higher to run. Please update your server.");
             pass = false;
         }
 
         if (!pass) {
-            getLogger().severe("Environment check failed! Use MSUA on your own risk!");
+            getLogger().severe("Environment check failed! MSUA is disabling");
+            return;
         }
 
-        getLogger().info("MSUA Starting...");
+        getLogger().info("MSUA is starting...");
         Bukkit.getPluginManager().registerEvents(PLUGIN_LISTENER, this);
         Bukkit.getPluginCommand("msua").setExecutor(new MSUACommands());
+        integrationManager = new IntegrationManager();
+        integrationManager.setup();
         getLogger().info("MSUA is ready.");
     }
 
     @Override
     public void onDisable() {
+        integrationManager.shutdown();
         HandlerList.unregisterAll(this);
+        getLogger().info("MSUA is disabled.");
     }
 }
