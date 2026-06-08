@@ -10,7 +10,6 @@ softdepend:
 commands:
   msua:
     description: MSUA base command
-    usage: The MSUA version you have installed does not seem to be compatible with your server setup. Check your console for more detailed info.
 
 permissions:
   msua.admin:

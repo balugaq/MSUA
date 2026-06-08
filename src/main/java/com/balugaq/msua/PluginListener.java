@@ -29,7 +29,9 @@ public class PluginListener implements Listener {
             }
         }
 
+        MSUA.sendOpMessage("Unregistering vanilla recipes ", jp.getName());
         unregisterVanillaRecipes(jp);
+        MSUA.sendOpMessage("Unregistering listeners ", jp.getName());
         unloadListeners(jp);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Slimefun")) {
@@ -50,17 +52,40 @@ public class PluginListener implements Listener {
         HandlerList.unregisterAll(plugin);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @SneakyThrows
     public void unregisterVanillaRecipes(Plugin plugin) {
+        Object server = ReflectionUtil.invokeStaticMethod(Class.forName("net.minecraft.server.MinecraftServer"), "getServer");
         var iter = Bukkit.recipeIterator();
         while (iter.hasNext()) {
             var recipe = iter.next();
             if (recipe instanceof Keyed keyed) {
                 var namespacedKey = keyed.getKey();
                 if (namespacedKey.getNamespace().equalsIgnoreCase(plugin.getName())) {
-                    iter.remove();
+                    // see RecipeIterator
+                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(ReflectionUtil.getValue(ReflectionUtil.invokeMethod(
+                        server,
+                        "getRecipeManager"),
+                            "recipes"),
+                                "byKey"),
+                                    "remove",
+                                ReflectionUtil.invokeMethod(ReflectionUtil.getValue(iter,
+                                    "currentRecipe"),
+                                        "id"));
+                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(
+                            iter,
+                            "recipes"),
+                                "remove");
                 }
             }
         }
+        ReflectionUtil.invokeMethod(ReflectionUtil.invokeMethod(
+                server,
+                "getRecipeManager"),
+                    "finalizeRecipeLoading");
+        ReflectionUtil.invokeMethod(ReflectionUtil.invokeMethod(
+                server,
+                "getPlayerList"),
+                    "reloadRecipes");
     }
 }

@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -170,22 +171,12 @@ public class RebarUtil {
         return pages;
     }
 
-    public static void disableAddon(RebarAddon ra, Map<Location, RebarBlock> normals) {
+    public static void disableAddon(RebarAddon ra, Set<Location> normals) {
         sendOpMessage("Calling RebarBlockUnloadEvent");
         // call unload event for blocks from the addon
-        for (var loc : normals.keySet()) {
+        for (var loc : normals) {
             if (BlockStorage.get(loc) instanceof PhantomBlock pb) {
                 new RebarBlockUnloadEvent(pb.getBlock(), pb).callEvent();
-            }
-        }
-
-        if (ra.getJavaPlugin().getName().equals("Pylon")) {
-            sendOpMessage("Handling SmelteryController");
-            for (var rebar : normals.values()) {
-                if (rebar instanceof SmelteryController sc) {
-                    // pixels are not persistent, in order to simulate the server stopping, remove the pixels.
-                    ReflectionUtil.invokeMethod(sc, "removePixels");
-                }
             }
         }
     }
@@ -202,41 +193,6 @@ public class RebarUtil {
             ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
             if (config == null) continue;
             type.loadFromConfig(config);
-        }
-
-        Path recipesDir = Rebar.INSTANCE.getDataPath().resolve("recipes");
-        if (Files.exists(recipesDir)) {
-            try (Stream<Path> recipeDirs = Files.list(recipesDir)) {
-                for (Path recipeDir : (Iterable<Path>) recipeDirs::iterator) {
-                    if (!Files.isDirectory(recipeDir)) continue;
-
-                    String namespace = recipeDir.getFileName().toString();
-                    if (namespace.contains(".")) {
-                        namespace = namespace.substring(0, namespace.lastIndexOf('.'));
-                    }
-
-                    try (Stream<Path> recipePaths = Files.list(recipeDir)) {
-                        for (Path recipePath : (Iterable<Path>) recipePaths::iterator) {
-                            if (!Files.isRegularFile(recipePath)) continue;
-                            String fileName = recipePath.getFileName().toString();
-                            String extension = fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.') + 1) : "";
-                            if (!"yml".equals(extension) && !"yaml".equals(extension)) continue;
-
-                            String nameWithoutExt = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
-                            NamespacedKey key = new NamespacedKey(namespace, nameWithoutExt);
-
-                            Object recipeTypeObj = RebarRegistry.RECIPE_TYPES.get(key);
-                            if (!(recipeTypeObj instanceof ConfigurableRecipeType<?> type)) continue;
-
-                            ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromOrThrow", recipePath);
-                            type.loadFromConfig(config);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                sendOpMessage("Failed to read recipes directory: " + e.getMessage());
-                e.printStackTrace();
-            }
         }
 
         sendOpMessage("Reloading chunks");
@@ -273,5 +229,6 @@ public class RebarUtil {
         objs[0] = "[RebarExtension] ";
         System.arraycopy(msg, 0, objs, 1, msg.length);
         MSUA.sendOpMessage(objs);
+        MSUA.console(objs);
     }
 }

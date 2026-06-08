@@ -1,6 +1,7 @@
 package com.balugaq.msua;
 
 import com.google.common.base.Preconditions;
+import io.github.pylonmc.pylon.content.machines.smelting.SmelteryController;
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.pylonmc.rebar.block.BlockStorage;
 import io.github.pylonmc.rebar.block.PhantomBlock;
@@ -34,9 +35,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -358,10 +361,17 @@ public class PluginUtil {
     @SneakyThrows
     @ApiStatus.Obsolete
     public static void disablePlugin(Plugin plugin, boolean disableChildren) {
-        Map<Location, RebarBlock> normals = new HashMap<>();
+        Set<Location> normals = new HashSet<>();
         for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
             if (rebar instanceof PhantomBlock) continue;
-            normals.put(rebar.getBlock().getLocation(), rebar);
+            if (plugin.getName().equals("Pylon")) {
+                RebarUtil.sendOpMessage("Handling SmelteryController");
+                if (rebar instanceof SmelteryController sc) {
+                    // pixels are not persistent, in order to simulate the server stopping, remove the pixels.
+                    ReflectionUtil.invokeMethod(sc, "removePixels");
+                }
+            }
+            normals.add(rebar.getBlock().getLocation());
         }
 
         if (disableChildren) {
