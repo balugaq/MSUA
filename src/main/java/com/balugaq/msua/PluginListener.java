@@ -45,7 +45,6 @@ public class PluginListener implements Listener {
     @SuppressWarnings("DataFlowIssue")
     @SneakyThrows
     public void unregisterVanillaRecipes(Plugin plugin) {
-        Object server = ReflectionUtil.invokeStaticMethod(Class.forName("net.minecraft.server.MinecraftServer"), "getServer");
         var iter = Bukkit.recipeIterator();
         while (iter.hasNext()) {
             var recipe = iter.next();
@@ -53,9 +52,8 @@ public class PluginListener implements Listener {
                 var namespacedKey = keyed.getKey();
                 if (namespacedKey.getNamespace().equalsIgnoreCase(plugin.getName())) {
                     // see RecipeIterator
-                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(ReflectionUtil.getValue(ReflectionUtil.invokeMethod(
-                        server,
-                        "getRecipeManager"),
+                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(ReflectionUtil.getValue(
+                            Nms.getRecipeManager(),
                             "recipes"),
                                 "byKey"),
                                     "remove",
@@ -69,12 +67,10 @@ public class PluginListener implements Listener {
                 }
             }
         }
-        ReflectionUtil.invokeMethod(ReflectionUtil.invokeMethod(
-                server,
-                "getRecipeManager"),
+        ReflectionUtil.invokeMethod(Nms.getRecipeManager(),
                     "finalizeRecipeLoading");
         ReflectionUtil.invokeMethod(ReflectionUtil.invokeMethod(
-                server,
+                Nms.getMinecraftServer(),
                 "getPlayerList"),
                     "reloadRecipes");
     }

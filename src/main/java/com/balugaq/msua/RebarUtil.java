@@ -143,6 +143,11 @@ public class RebarUtil {
             }
             p.getButtons().removeAll(toRemove);
         });
+
+        sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " Registries");
+        Map<NamespacedKey, RebarRegistry<?>> registries = ReflectionUtil.getStaticValue(RebarRegistry.class, "registries", Map.class);
+        registries.entrySet().removeIf(entry -> entry.getKey().getNamespace().equals(addon.getJavaPlugin().getName().toLowerCase()));
+
         sendOpMessage("Unregistering ", addon.getJavaPlugin().getName(), " RebarRegistry.ADDONS#unregister");
         if (RebarRegistry.ADDONS.contains(addon.getKey())) {
             RebarRegistry.ADDONS.unregister(addon);

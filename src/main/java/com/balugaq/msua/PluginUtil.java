@@ -364,13 +364,24 @@ public class PluginUtil {
                 // see Rebar#loadRecipes()
                 RebarUtil.sendOpMessage("Reloading recipes");
 
-                for (Object typeObj : RebarRegistry.RECIPE_TYPES) {
-                    if (!(typeObj instanceof ConfigurableRecipeType<?> type)) continue;
+                Object flag = ReflectionUtil.getValue(Nms.getRecipeManager(), "enabledFlags");
+                try {
+                    ReflectionUtil.setValue(Nms.getRecipeManager(), "enabledFlags", null);
+                    for (Object typeObj : RebarRegistry.RECIPE_TYPES) {
+                        if (!(typeObj instanceof ConfigurableRecipeType<?> type)) continue;
 
-                    ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
-                    if (config == null) continue;
-                    type.loadFromConfig(config);
+                        ConfigSection config = (ConfigSection) ReflectionUtil.invokeStaticMethod(ConfigSection.class, "fromResource", ra.getJavaPlugin(), ReflectionUtil.getValue(type, "filePath", String.class));
+                        if (config == null) continue;
+                        type.loadFromConfig(config);
+                    }
+                } finally {
+                    ReflectionUtil.setValue(Nms.getRecipeManager(), "enabledFlags", flag);
                 }
+                ReflectionUtil.invokeMethod(Nms.getRecipeManager(), "finalizeRecipeLoading");
+                ReflectionUtil.invokeMethod(ReflectionUtil.invokeMethod(
+                        Nms.getMinecraftServer(),
+                        "getPlayerList"),
+                            "reloadRecipes");
 
                 RebarUtil.sendOpMessage("Reloading chunks");
                 Set<Chunk> chunks = new HashSet<>();
