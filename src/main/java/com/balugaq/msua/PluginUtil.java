@@ -388,8 +388,11 @@ public class PluginUtil {
                 Map<Location, UUID> phantoms = new HashMap<>();
                 for (var rebar : BlockStorage.getLoadedRebarBlocks()) {
                     if (!(rebar instanceof PhantomBlock pb)) continue;
-                    phantoms.put(pb.getBlock().getLocation(), ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class));
-                    chunks.add(pb.getBlock().getChunk());
+                    var uuid = ReflectionUtil.getValue(pb, "errorOutlineEntityId", UUID.class);
+                    if (uuid != null) {
+                        phantoms.put(pb.getBlock().getLocation(), uuid);
+                        chunks.add(pb.getBlock().getChunk());
+                    }
                 }
 
                 // make BlockStorage reload rebar data

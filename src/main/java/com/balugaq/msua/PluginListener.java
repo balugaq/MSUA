@@ -2,7 +2,6 @@ package com.balugaq.msua;
 
 import io.github.pylonmc.rebar.addon.RebarAddon;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
-import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.event.EventHandler;
@@ -14,7 +13,6 @@ import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Obsolete
 public class PluginListener implements Listener {
-    @SneakyThrows
     @EventHandler
     public void onDisablePlugin(PluginDisableEvent event) {
         Plugin jp = event.getPlugin();
@@ -43,7 +41,6 @@ public class PluginListener implements Listener {
     }
 
     @SuppressWarnings("DataFlowIssue")
-    @SneakyThrows
     public void unregisterVanillaRecipes(Plugin plugin) {
         var iter = Bukkit.recipeIterator();
         while (iter.hasNext()) {

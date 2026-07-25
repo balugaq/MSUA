@@ -97,8 +97,8 @@ public class MSUA extends JavaPlugin {
         }
 
         MinecraftVersion current = MinecraftVersion.current();
-        if (current.isBefore(MinecraftVersion.V1_21_11)) {
-            getLogger().severe("MSUA requires Paper " + MinecraftVersion.V1_21_11.humanize() + " or higher to run. Please update your server.");
+        if (current.isBefore(MinecraftVersion.V1_20_1)) {
+            getLogger().severe("MSUA requires Paper " + MinecraftVersion.V1_20_1.humanize() + " or higher to run. Please update your server.");
             pass = false;
         }
 
