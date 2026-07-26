@@ -30,12 +30,12 @@ jobs:
       - name: Build with Gradle
         run: gradle build shadowJar
 
-      - name: Upload to Blob Builds
-        uses: WalshyDev/blob-builds/gh-action@main
-        with:
-          project: MSUA
-          apiToken: ${{ secrets.BLOB_BUILDS_API_TOKEN }}
-          releaseNotes: ${{ github.event.head_commit.message }}
+#      - name: Upload to Blob Builds
+#        uses: WalshyDev/blob-builds/gh-action@main
+#        with:
+#          project: MSUA
+#          apiToken: ${{ secrets.BLOB_BUILDS_API_TOKEN }}
+#          releaseNotes: ${{ github.event.head_commit.message }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
