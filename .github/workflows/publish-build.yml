@@ -22,8 +22,13 @@ jobs:
         with:
           java-version: 25
 
-      - name: Build with Maven
-        run: mvn -B package
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 9.1.0
+
+      - name: Build with Gradle
+        run: ./gradlew build shadowJar
 
       - name: Upload to Blob Builds
         uses: WalshyDev/blob-builds/gh-action@main
@@ -40,4 +45,4 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            build.zip
+            build/libs/*.jar
