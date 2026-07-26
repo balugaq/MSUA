@@ -22,22 +22,6 @@ plugins {
 group = "com.balugaq.msua"
 version = "0.1.4"
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
-}
-
-toolchainManagement {
-    jvm {
-        javaRepositories {
-            repository("temurin") {
-                resolverClass.set(JavaToolchainResolver::class.java)
-            }
-        }
-    }
-}
-
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -67,6 +51,12 @@ dependencies {
 
     // Annotation processors
     annotationProcessor("org.projectlombok:lombok:1.18.46")
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
 tasks {
@@ -102,9 +92,6 @@ tasks {
             expand(project.properties)
         }
         filesMatching("**/*.properties") {
-            expand(project.properties)
-        }
-        filesMatching("tags/*.json") {
             expand(project.properties)
         }
     }
