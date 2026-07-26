@@ -28,7 +28,7 @@ jobs:
           gradle-version: 9.1.0
 
       - name: Build with Gradle
-        run: ./gradlew build shadowJar
+        run: gradle build shadowJar
 
       - name: Upload to Blob Builds
         uses: WalshyDev/blob-builds/gh-action@main
