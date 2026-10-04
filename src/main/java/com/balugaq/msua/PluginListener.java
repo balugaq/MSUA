@@ -44,24 +44,27 @@ public class PluginListener implements Listener {
     public void unregisterVanillaRecipes(Plugin plugin) {
         var iter = Bukkit.recipeIterator();
         while (iter.hasNext()) {
-            var recipe = iter.next();
-            if (recipe instanceof Keyed keyed) {
-                var namespacedKey = keyed.getKey();
-                if (namespacedKey.getNamespace().equalsIgnoreCase(plugin.getName())) {
-                    // see RecipeIterator
-                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(ReflectionUtil.getValue(
-                            Nms.getRecipeManager(),
-                            "recipes"),
-                                "byKey"),
-                                    "remove",
+            try {
+                var recipe = iter.next();
+                if (recipe instanceof Keyed keyed) {
+                    var namespacedKey = keyed.getKey();
+                    if (namespacedKey.getNamespace().equalsIgnoreCase(plugin.getName())) {
+                        // see RecipeIterator
+                        ReflectionUtil.invokeMethod(ReflectionUtil.getValue(ReflectionUtil.getValue(
+                                                Nms.getRecipeManager(),
+                                                "recipes"),
+                                        "byKey"),
+                                "remove",
                                 ReflectionUtil.invokeMethod(ReflectionUtil.getValue(iter,
-                                    "currentRecipe"),
+                                                "currentRecipe"),
                                         "id"));
-                    ReflectionUtil.invokeMethod(ReflectionUtil.getValue(
-                            iter,
-                            "recipes"),
+                        ReflectionUtil.invokeMethod(ReflectionUtil.getValue(
+                                        iter,
+                                        "recipes"),
                                 "remove");
+                    }
                 }
+            } catch (IllegalArgumentException ignored) {
             }
         }
         ReflectionUtil.invokeMethod(Nms.getRecipeManager(),
